@@ -1,0 +1,105 @@
+The Little Plack Book
+---------------------
+
+Plack is superglue for modern Perl web applications.
+
+Plack is a toolkit for building, deploying, managing, and reusing all of the
+moving parts necessary to bring your Perl code to the web. It builds on the
+simple-but-effective PSGI standard and allows you to concentrate on what's most
+important: writing great code.
+
+Plack and PSGI are compatible with dozens of web servers, pure-Perl and
+otherwise, and dozens of great web frameworks and toolkits. Plack also offers
+access to the ever-expanding world of middleware and components for everything
+from authentication and access control to logging, debugging, and security
+filtering.
+
+Modern Perl demands a modern approach to the web. Welcome to Plack.
+
+Intended Audience
+-----------------
+
+Readers should have some familiarity with web programming in general: how web
+servers work, the basics of HTTP, and HTML.
+
+Readers should also be comfortable with Perl and the CPAN. If you've read
+Modern Perl, you should be ready.
+
+Reviewer Guidelines
+-------------------
+
+I appreciate all suggestions and critiques, especially:
+
+ * is the work accurate?
+ * is the work complete?
+ * is the work coherent?
+ * are there missing sections and subjects?
+ * are the examples effective?
+ * is the flow of information appropriate?
+
+
+Building this Book
+------------------
+
+You need a modern version of Perl installed.  I recommend at least Perl 5.12,
+but anything newer than 5.8.6 should work.
+
+You should also have Pod::PseudoPod 0.16 or newer installed with its
+dependencies.
+
+From the top level directory of a checkout, build the individual chapters with:
+
+    $ perl build/tools/build_chapters.pl
+
+The chapter sources are in the sections/ directory.  Each chapter has a
+corresponding chapter_nn.pod file.  Each file contains multiple POD links which
+refer to other files in the sections/ directory.  Each of those files contains
+a PseudoPOD Z<> anchor.
+
+The build_chapters.pl program weaves these sections into chapters and writes
+them to POD files in build/chapters.
+
+(This process makes it easy to rearrange sections within and between chapters
+without generating huge diffs.)
+
+To build HTML from these woven chapters:
+
+    $ perl build/tools/build_html.pl
+
+This will produce nicely-formatted HTML in the build/html/ directory.  If
+anything looks wrong, it's a mistake on my part (or a CSS problem) and patches
+are very welcome.
+
+To build an ePub eBook from the woven chapters:
+
+    $ perl build/tools/build_epub.pl
+
+This will produce an ePub eBook in the build/epub/ directory.
+
+To build PDFs from the chapters:
+
+    $ perl build/tools/build_pdf.pl
+
+This will build PDFs in the build/pdf directory.  You must have App::pod2pdf
+installed from the CPAN.
+
+Contributing
+------------
+
+This work is licensed under a Creative Commons Attribution-Noncommercial-Share
+Alike 3.0 United States License.  For more details, see:
+
+    http://creativecommons.org/licenses/by-nc-nd/3.0/us/
+
+Please feel free to point people to this repository. Suggestions and
+contributions are welcome. For now, please refrain from distributing modified
+versions. Instead, please file bugs or submit pull requests against this
+repository.
+
+This book will be available in print and in formatted electronic formats
+from Onyx Neon Press:
+
+    http://www.onyxneon.com/
+
+Onyx Neon will relicense the book under a more liberal license upon
+publication.
