@@ -1,0 +1,146 @@
+\documentclass[10pt,openany]{book}
+
+% Keep straight quotes in verbatim sections.
+\usepackage{upquote}
+\usepackage{fancybox}
+\usepackage{fancyvrb}
+
+% elide extra space after sentence endings
+\frenchspacing
+
+% fancy hyphenation (enables \textnhtt)
+\usepackage{hyphenat}
+
+\usepackage{makeidx}
+\usepackage[OnyxNeon]{onfancy}
+\usepackage{onyxneon}
+
+\usepackage{graphicx}
+\DeclareGraphicsExtensions{.pdf,.png}
+\usepackage{colortbl}
+
+% Control title size and spacing
+\usepackage[noindentafter]{titlesec}
+\titleformat{\section}
+{\Large\bfseries\fontfamily{phv}\selectfont}{\thesection}{1em}{}
+\titleformat{\subsection}
+{\large\bfseries\fontfamily{phv}\selectfont}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}
+{\normalsize\bfseries\fontfamily{phv}\selectfont}{\thesubsubsection}{1em}{}
+\titlespacing{\section}{0pt}{*1.5}{0pt}
+\titlespacing{\subsection}{0pt}{*1.5}{0pt}
+\titlespacing{\subsubsection}{0pt}{*1.5}{0pt}
+
+% This line takes a 6x9 page and futzes with the margins to make it
+% look right inside a bound book.
+\usepackage[centering,width=4.5in,height=7.5in,includeall,twoside,hcentering,vcentering,marginparsep=0in,marginparwidth=0in]{geometry}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+
+% improve hyperlinks
+\usepackage{hyperref}
+\hypersetup{pagebackref=true}
+% allow hyperlinks to cross lines
+\hypersetup{breaklinks=true}
+% elide borders on links
+\hypersetup{pdfborder=0 0 0}
+\hypersetup{plainpages=true}
+
+% allow URL linebreaking
+\usepackage{url}
+\usepackage{breakurl}
+
+\fancyhf{}
+\fancyfoot[C]{\thepage}
+\fancyhead[OR]{\nouppercase {\em \leftmark}}
+\fancyhead[EL]{\nouppercase {\em The Little Plack Book}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\fancypagestyle{title}{%
+\fancyhf{}
+\fancyfoot[C]{\scriptsize{\thepage}}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}}
+
+\usepackage{times} % Times and Helevetica fonts
+\usepackage[T1]{fontenc}
+
+% nicer tables
+\usepackage{tabularx}
+
+% enable the use of unicode
+\usepackage[mathletters]{ucs}
+\usepackage[utf8x]{inputenc}
+\renewcommand*\ttdefault{cmtt} % Computer Modern for monospaced
+
+\usepackage{titleref} % Allow crossreferences to display full section title
+%\usepackage{showkeys} % turn on for debugging of xrefs
+
+% skip paragraph indentation
+\setlength{\parindent}{0in}
+
+\title{The Little Plack Book}
+\date{}
+\author{chromatic}
+
+\newcommand{\onxref}[1]{see \nameref{#1}, page \pageref{#1}}
+
+\makeindex
+
+\begin{document}
+
+% suppress section numbering but include A-heads in ToC
+\setcounter{tocdepth}{1}
+\setcounter{secnumdepth}{-1}
+
+\addtolength{\parskip}{5pt}
+\addtolength{\skip\footins}{10pt}
+\addtolength{\footnotesep}{5pt}
+% \headline={\hrulefill}
+% \footline={\hrulefill}
+
+\setcounter{page}{-1}
+\clearpage
+\thispagestyle{empty}
+\begin{flushright}
+\Huge Modern Perl
+\end{flushright}
+\clearpage
+\thispagestyle{empty}
+\maketitle
+\include{copyright}
+
+\tableofcontents
+
+% mark preface specially
+\addcontentsline{toc}{chapter}{Preface}
+\fancyhead[OR]{\nouppercase {\em Preface}}
+\pagenumbering{roman}
+\setcounter{page}{1}
+\include{chapter_00}
+
+% and now the rest
+\fancyhead[OR]{\nouppercase {\em \leftmark}}
+
+% the content begins here
+\pagenumbering{arabic}
+\setcounter{page}{1}
+\include{chapter_01}
+\include{chapter_02}
+\include{chapter_03}
+\include{chapter_04}
+\include{chapter_05}
+\include{chapter_06}
+\include{chapter_07}
+\include{chapter_08}
+\include{chapter_09}
+\include{chapter_10}
+
+% When there is nothing to be indexed this can be omitted.
+\addtolength{\columnsep}{35pt}
+\scriptsize
+\printindex
+
+\end{document}

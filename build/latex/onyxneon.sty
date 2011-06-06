@@ -1,0 +1,25 @@
+
+% These lines will make widows and orphans very rare.
+\clubpenalty=100
+\widowpenalty=100
+
+% This should cause chapter numbers to vanish.
+% You might not always want this...
+%\setcounter{secnumdepth}{-1}
+
+% This causes sections, which already don't have numbers due to the
+% above, to not show up in the table of contents. (We don't want
+% \section*{} because that makes the section name not get set in
+% \rightmark.)
+\setcounter{tocdepth}{0}
+
+% This displays three open circles as a section separator.
+% Since ends of sections aren't tagged, only beginnings,
+% and beginnings don't always want to be preceded by this,
+% \onendsection should be inserted manually. You could probably
+% write some TeX to say "if this is the first section in a
+% chapter, don't do this" but with secnumdepth=-1 I have no idea
+% how to do that.
+% \newcommand{\onendsection}{\nopagebreak[4] \begin{center} $\circ\ \circ\ \circ$ \end{center}}
+
+\DefineVerbatimEnvironment{CodeListing}{Verbatim}{gobble=4,fontfamily=courier,commandchars=\\\{\}}
