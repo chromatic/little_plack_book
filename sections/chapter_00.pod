@@ -1,0 +1,23 @@
+=head0 Introducing Plack
+
+Plack is superglue for the modern Perl web.
+
+Glue is easy. With enough glue you can stick almost anything together. It
+doesn't have to be art. You just have to smear enough adhesive on two surfaces
+and smash them together long enough for them to dry.
+
+In that sense, Plack is I<better> than superglue. Plack is a toolkit for web
+developers. Plack provides a series of interfaces for web developers. Plack
+offers a standard way for doing the very common (and a few uncommon) things
+that every web application does.
+
+When you use Plack, you write less code. You have more options. You take
+advantage of new possibilities. You spend your time and resources doing what's
+important to your application--not doing the same thing over and over again,
+but creating new things.
+
+Plack is superglue, yes. More than that, it's a way of arranging your code to
+take advantage of how the web really works. You're probably only minutes away
+from being able to use it.
+
+L<psgi_pattern>
