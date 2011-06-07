@@ -1,0 +1,97 @@
+=head1 The Little Plack Book
+
+This outline is a work in progress. It will change and evolve with the book and
+our understanding of it. Each second-level heading corresponds to a chapter and
+each third-level heading corresponds to a section.
+
+=head2 Introducing Plack
+
+This chapter explains the what and why of Plack and PSGI. It should give
+sufficient theory so that the subsequent chapters make sense in the entire
+Plack context.
+
+Be sure to explain the ecosystem including documentation, mailing list, advent
+calendars, and where to find good modules.
+
+=head2 Deploying a Plack Application
+
+Though the fun parts of Plack are all about the middleware, most of the use of
+Plack is I<deploying> applications.
+
+=head3 Your F<.psgi> File
+
+Creating and modifying and comprehending.
+
+=head3 Choosing a Server
+
+Is this the right place? See the parallel to the next chapter on middleware.
+"Choose FastCGI when... Choose mod_perl when.... Choose Twiggy when...."
+
+=head2 Middleware
+
+The PSGI protocol gives plenty of opportunities to add features by decorating
+your application. (First someone has to explain what decorating an application
+means.)
+
+=head3 How Middleware Works
+
+There may be a dependency here on Plack::Request and Plack::Response. How much
+detail should this include?
+
+=head3 Enabling Middleware
+
+With Plack::Builder and, perhaps, without.
+
+=head3 Important Middleware
+
+Logging, authentication, security filtering, rewriting, proxying -- pick a few
+of the best pieces of middleware and show them off here.
+
+=head2 Testing Plack Applications
+
+Everything starts to pay off here. Be careful not to let this overwhelm the
+rest of the book. Note that effective testing of all of the decorated
+possibilities is both useful and tricky--very much a selling point few others
+will tackle.
+
+=head2 Inside Plack
+
+How much detail does this need? An architectural overview may suffice. Be
+careful not to tie this too much to details which will change but do document
+the various moving pieces people will need to use.
+
+=head3 PSGI
+
+This may be covered earlier and better elsewhere.
+
+=head3 Plack::Request
+
+=head3 Plack::Response
+
+=head2 Writing Plack Middleware
+
+See Plack::Middleware. What's the relationship to Plack::App though? Merge this
+with the internals chapter?
+
+=head3 Composability
+
+How to play nicely with other middleware. At first blush, this means trying not
+to stomp all over the session. It may also mean not conflicting with other
+middleware and extensions merely installed.
+
+=head3 Extensibility
+
+How to write sufficiently generic middleware.
+
+If everything's a closure which takes one parameter and returns one value, how
+do you give people the opportunity to configure things? Partial application
+over curried objects (or however else you provide genericity) makes it happen.
+
+In other words, think like a JavaScript programmer and return a closure.
+
+=head2 Plack for Frameworks
+
+Here goes advanced material that may or may not be useful to most people. Is it
+worth doing? Think about this and commit only when absolutely necessary.
+
+See also Mojolicious and its PSGI without Plack. TIMTOWTDI.
