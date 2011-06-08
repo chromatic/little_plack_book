@@ -1,3 +1,106 @@
 =head1 The PSGI Pattern
 
 Z<psgi_pattern>
+
+X<PSGI>
+
+Plack itself is an implementation of PSGI, which is itself a documented
+interface with a protocol. The PSGI interface underlies and supports Plack,
+because PSGI defines what a web application is. PSGI isn't magic. PSGI is
+merely a standardization of what you as a web programmer already know.
+
+=begin sidebar
+
+X<WSGI>
+X<Rack>
+
+PSGI and Plack count as inspiration Python's WSGIN<See
+U<http://www.python.org/dev/peps/pep-0333/>> and Ruby's RackN<See
+U<http://chneukirchen.org/blog/archive/2007/02/introducing-rack.html>>.
+
+=end sidebar
+
+Consider how a web application works. A client makes a request of a server,
+passing along a URL via one of the HTTP methods, other HTTP headers, and other
+request information. The server performs some action, whether reading a file or
+invoking part or all of a program. The server returns an HTTP status code, some
+HTTP headers, and the body of the response.
+
+Assuming you have some sort of web server set up to run a Perl program, you
+could write a very simple Perl web application like:
+
+=begin programlisting
+
+    sub hello_world
+    {
+        return [ 200, [ 'Content-Type', text/html' ], 'Hello, world!' ];
+    }
+
+=end programlisting
+
+The pattern of such a Perl web application is:
+
+=begin programlisting
+
+    sub application
+    {
+        my $http_environment = shift;
+
+        my ($status_code, $headers, $body) = activate( $http_environment );
+
+        return [ $status_code, $headers, $body ];
+    }
+
+=end programlisting
+
+X<C<curl>>
+X<C<telnet>>
+
+In practice, some of that data is optional--given a simple HTTP GET request
+typed in manually from C<curl> or C<telnet>, there may be no incoming HTTP
+headers or HTTP payload. Likewise, the server may respond with merely the HTTP
+status code.
+
+PSGI codifies and encapsulates this pattern. A PSGI-compatible application is a
+Perl function which takes as a single argument a hash reference of HTTP request
+data and returns a one-to-three element array reference of HTTP response data.
+You could have invented this. It's really that simple.
+
+X<PSGI; specification>
+
+The PSGI specification (see C<perldoc PSGI>) explains the details of what the
+HTTP environment hash must and may contain. As you might expect, required HTTP
+specifics include the HTTP request method, the application's URI request path,
+any extra path elements, and other HTTP headers. PSGI adds extra parameters
+such as the input stream for HTTP C<PUT> or C<POST> data and an error output
+stream.
+
+This specification offers two benefits. First, every application which complies
+with PSGI can work with every server which provides a PSGI environment. It
+doesn't matter whether the server communicates with clients over telnet or
+avian-aware IPN<See RFC 1149 at U<http://www.ietf.org/rfc/rfc1149.txt>.> or
+even if the server speaks HTTP to clients at allN<See C<Plack::Test>.>. The
+unification of interface offers flexibility and independence to PSGI
+applications.
+
+Second, the silly example code itself demonstrates a subtle but powerful
+feature of PSGI. While the C<application()> function is a PSGI-compatible web
+application, so is the C<activate()> function it calls:
+
+=begin programlisting
+
+        my ($status_code, $headers, $body) = activate( $http_environment );
+
+=end programlisting
+
+=for author
+
+Add link to middleware chapter when it exists.
+
+=end for
+
+A PSGI-compatible application--a function conforming to the PSGI interface--may
+wrap one or more other PSGI-compatible applications. Almost anything you can
+imagine in possible this way. In particular, this enables middleware to
+intercept, rewrite, modify, redispatch, and even bypass applications as
+desired.

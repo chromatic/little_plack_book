@@ -20,4 +20,6 @@ Plack is superglue, yes. More than that, it's a way of arranging your code to
 take advantage of how the web really works. You're probably only minutes away
 from being able to use it.
 
+First, you must understand what and why it is.
+
 L<psgi_pattern>
