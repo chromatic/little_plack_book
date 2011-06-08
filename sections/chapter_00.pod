@@ -23,3 +23,5 @@ from being able to use it.
 First, you must understand what and why it is.
 
 L<psgi_pattern>
+
+L<plack_and_psgi>
