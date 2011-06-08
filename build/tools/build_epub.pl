@@ -257,7 +257,7 @@ sub generate_ebook
     $epub->add_language('en');
 
     # Add the book cover.
-    add_cover($epub, './images/mp_cover_full.png');
+    add_cover($epub, './images/little_plack_book_cover_full.png');
 
     # Add some other metadata to the OPF file.
     $epub->add_meta_item('EBook::EPUB version', $EBook::EPUB::VERSION);
@@ -285,7 +285,7 @@ sub generate_ebook
     mkdir $dir unless -e $dir;
 
     # Generate the ePub eBook.
-    my $filename = catfile(qw(build epub modern_perl.epub));
+    my $filename = catfile(qw(build epub little_plack_book.epub));
     $epub->pack_zip($filename);
 }
 
