@@ -1,3 +1,85 @@
 =head1 Plack and PSGI
 
 Z<plack_and_psgi>
+
+PSGI is the specification. Any code--server, middleware, or application--which
+conforms to the PSGI specification should interoperate with any other code
+which also conforms to the specification.
+
+X<Plack>
+
+I<Plack> is a toolkit which implements the PSGI specification. It's a reference
+implementation in that it follows PSGI as closely as possible, but it's also
+currently the best known and most used implementation. Besides serving as a
+reference for I<how> to use PSGI effectively, Plack provides plenty of code to
+help write PSGI applications--so much, in fact, that it's common to talk about
+using and supporting Plack and not merely PSGI.
+
+In short, PSGI is deliberately simple and minimal so as to require as little
+from implementations as possible, while Plack is more powerful and offers far
+more abstractions. Plack provides several features, including:
+
+=over 4
+
+=item C<Plack::Request> and C<Plack::Response>
+
+X<C<Plack::Request>>
+X<C<Plack::Response>>
+
+These two modules provide object-oriented interfaces to the PSGI environment
+request and the PSGI response, respectively. As with all well-defined classes,
+this offers the possibility of customization. For example, a web framework
+which supports Plack could produce its own Plack-compatible C<::Request> and
+C<::Response> subclasses to add additional behaviors.
+
+=item * C<plackup>, C<Plack::Builder>, and F<.psgi> files
+
+X<C<plackup>>
+X<F<.psgi> files>
+X<C<Plack::Builder>>
+
+By convention, PSGI-compatible applications have the F<.psgi> suffix. The file
+should contain Perl 5 code which returns a function reference to serve as the
+entry point into the PSGI application. The C<plackup> utility runs F<.psgi>
+files.
+
+C<Plack::Builder> provides helper syntax for use in F<.psgi> files to manage
+the use of middleware and applications.
+
+=item C<Plack::Test>
+
+X<C<Plack::Test>>
+X<C<Test::Builder>>
+X<testing>
+
+The C<Plack::Test> module allows test code to run a Plack application on any of
+the available backend servers--or without a server at all. It is fully
+compatible with any Perl testing module built on C<Test::Builder>.
+
+=item the C<Plack::*> namespace
+
+Plack provides and preserves a namespace on the CPAN under which you can
+publish public Plack extensions. While full-blown applications and frameworks
+do not belong in the C<Plack::*> namespace, Plack reserves C<Plack::App::*> for
+middleware components which represent the end point in a request--such as
+serving static files or proxying to another server. Plack also reserves
+C<Plack::Middleware::*> for reusable middleware components which can serve at
+any point in an application's stack--such as a logging or authentication
+component.
+
+=item C<Plack::Middleware>
+
+X<C<Plack::Middleware>>
+
+C<Plack::Middleware> is a base class from which new Plack middleware can
+inherit. Using this as your base class allows your middleware to co-exist with
+other middleware.
+
+=item C<Plack::Handler>
+
+X<C<Plack::Handler>>
+
+C<Plack::Handler> is a class which defines the interface between C<plackup> and
+a server backend for PSGI.
+
+=back
