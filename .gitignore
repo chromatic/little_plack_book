@@ -1,2 +1,3 @@
 !.gitignore
 build/chapters/*pod
+build/epub/*.epub
