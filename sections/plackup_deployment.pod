@@ -1,3 +1,266 @@
 =head1 Deploying with C<plackup>
 
 Z<plackup_deployment>
+
+X<< C<plackup> >>
+
+Plack includes a program called C<plackup> which handles most deployment
+concerns.
+
+X<< F<.psgi> file; F<app.psgi> >>
+
+Suppose you have a file in the current directory called F<app.psgi>. To deploy
+that application, type:
+
+=begin screen
+
+    $ B<plackup>
+
+=end screen
+
+That's it! C<plackup> will examine the current environment and the file and
+will attempt to deploy the application to the most appropriate server backend.
+
+X<Dancer>
+X<web frameworks; Dancer>
+X<CPAN modules; Dancer>
+
+=begin sidebar
+
+Want to test this on your own? Install C<Plack> and C<Dancer> from the CPAN.
+Then create an example Dancer application with C<dancer -a My::App>. C<cd> into
+the new F<My-App> directory and everything should be ready to go.
+
+=end sidebar
+
+Chances are your application isn't in F<app.psgi>, however. If you're using a
+web framework, you probably have another file elsewhere. For example, Perl
+DancerN<See U<http://perldancer.org/> or
+U<http://search.cpan.org/perldoc?Dancer>.>'s standard layout creates a launcher
+file in F<bin/app.pl>. This file at is simplest resembles:
+
+=begin programlisting
+
+    #!/usr/bin/env perl
+
+    use Dancer;
+    use My::App;
+    dance;
+
+=end programlisting
+
+Though this my not look like a PSGI-compatible file, it is. The C<dance()>
+function ends up calling a method within Dancer called C<psgi_app()>, which
+returns a function reference:
+
+=begin programlisting
+
+    sub psgi_app {
+        my $self = shift;
+
+        B<sub {>
+            my $env = shift;
+            $self->init_request_headers($env);
+            my $request = Dancer::Request->new(env => $env);
+            $self->handle_request($request);
+        B<};>
+    }
+
+=end programlisting
+
+That's all a file needs to do to be a valid PSGI-compatible file. You can run
+this with C<plackup>:
+
+=begin screen
+
+    $ B<plackup bin/app.pl>
+
+=end screen
+
+... and if you've installed everything correctly, your application will be
+available on your local machine at port 5000.
+
+=begin sidebar
+
+X<< C<HTTP::Simple::PSGI> >>
+
+Dancer cheats a little bit by building around Plack internally. If you run
+C<perl bin/app.pl>, Dancer will launch its own webserver based on
+C<HTTP::Simple::PSGI>.
+
+=end sidebar
+
+=head2 C<plackup> Options
+
+If C<plackup> seems a little bit too magical, fear not. The program has several
+options to configure its behavior. While its defaults are useful for
+development and quick testing, you likely want different behavior when making
+your application available to real users.
+
+X<< C<plackup>; C<-a> >>
+X<< C<plackup>; C<--app> >>
+
+As shown previously, a single argument to C<plackup> can specify the
+appropriate PSGI file. You may also use the C<-a> or C<--app> option instead.
+
+=head2 Perlish Options
+
+C<plackup> has several options which resemble command-line options to C<perl>.
+
+X<< C<plackup>; C<-I> >>
+X<< C<plackup>; C<-M> >>
+X<< C<plackup>; C<-e> >>
+
+=over 4
+
+=item C<-I> adds paths to the Perl 5 library search path
+
+=item C<-M> loads additional Perl 5 modules I<before> C<plackup> loads the
+F<.psgi> file
+
+=item C<-e> evaluates a string of code as a PSGI application
+
+=back
+
+The latter bears more explanation. You could write a PSGI application as a
+one-liner from the command-line:
+
+=begin programlisting
+
+    $ B<plackup -e "sub { [ 200, [ 'Content-Type' => 'text/plain' ], \>
+      B< [ 'Hello from the CLI!' ] ] } ">
+
+=end programlisting
+
+If you use the C<-e> option I<and> specify a F<.psgi> file, C<plackup> will use
+the code on the command line as middleware configuration to apply to the
+application. This is the most likely use of C<-e>, as if you do not specify a
+F<.psgi> file, your command-line code must be a full PSGI compatible
+application on its own. C<plackup> will never load an implicit F<.psgi> file
+when C<-e> is in effect.
+
+=head2 Environment Options
+
+=for author
+
+This section needs a better name.
+
+=end for
+
+C<plackup> has four options to configure its behavior for the operating
+environment:
+
+X<< C<plackup>; C<-E> >>
+X<< C<plackup>; C<--env> >>
+X<< C<plackup>; C<PLACK_ENV> >>
+X<Plack::Middleware::AccessLog>
+X<Plack::Middleware::StackTrace>
+X<Plack::Middleware::Lint>
+X<< C<plackup>; C<-r> >>
+X<< C<plackup>; C<--reload> >>
+X<< C<plackup>; C<-R> >>
+X<< C<plackup>; C<--Reload> >>
+X<< C<plackup>; C<--access-log> >>
+
+=over 4
+
+=item C<-E> or C<--env> specifies the environment setting. The default value is
+C<development>, but you may use any string you like, such as C<deployment> or
+C<test>. Setting this value updates the C<PLACK_ENV> environment variable. Any
+other Plack component can read that environment variable and configure
+different options based on its value.
+
+Plack automatically enables Plack::Middleware::AccessLog,
+Plack::Middleware::StackTrace, and Plack::Middleware::Lint for the
+C<development> setting.
+
+You may alternately set C<PLACK_ENV> manually instead of using C<-E> or
+C<--env>.
+
+=item C<-r> or C<--reload> tells C<plackup> to watch the F<lib/> and base
+directory of your F<.psgi>. When any file in either directory changes,
+C<plackup> will tell the running server to restart. If you use this, be sure
+that the server you've chosen supports restarting in place--and specify that
+server manually with the C<-s> option.
+
+=item C<-R> or C<--Reload> watches a specified list of directories for changes.
+This list is a comma-separated string. The other caveats of C<-r> apply.
+
+=item C<--access-log> sends all of the access log information to the specified
+path instead of to C<plackup>'s standard error.
+
+=back
+
+=head2 Server options
+
+X<< C<plackup>; C<PLACK_SERVER> >>
+X<< C<Plack::Loader> >>
+
+C<plackup> supports several options to choose and configure the backend
+PSGI-compatible server. If you do not specify a server, C<plackup> will select
+a server for you by examining the runtime environment of your application. If
+you've set the C<PLACK_SERVER> environment variable, C<plackup> will interpret
+its value as the name of the server to use. Otherwise, C<plackup> will check
+for environment variables identifying a CGI or FastCGI environment and choose
+the proper backend. If neither of those options were set, it will examine the
+F<.psgi> file for the use of specific modules with known backendsN<See
+C<Plack::Loader> for more details.>.
+
+X<< C<Plack::Handler::HTTP::Server::PSGI> >>
+
+Finally, C<plackup> will fall back to the default standalone server,
+C<Plack::Handler::HTTP::Server::PSGI>.
+
+X<< C<plackup>; C<-s> >>
+X<< C<plackup>; C<--server> >>
+X<< C<plackup>; C<-L> >>
+X<< C<plackup>; C<--loader> >>
+X<< C<plackup>; C<-D> >>
+X<< C<plackup>; C<--daemonize> >>
+X<< C<plackup>; C<-o> >>
+X<< C<plackup>; C<--host> >>
+X<< C<plackup>; C<-p> >>
+X<< C<plackup>; C<--port> >>
+X<< C<plackup>; C<-l> >>
+X<< C<plackup>; C<--listen> >>
+
+C<plackup> supports several command-line options to configure the server:
+
+=over 4
+
+=item C<-s> or C<--server> selects the server to use by name.
+
+=item C<-D> or C<--daemonize> asks the server to run itself in the background.
+The server may ignore this option.
+
+=item C<-o> or C<--host> asks the server to specify to a named TCP host. The
+server may ignore this option. The default behavior is to bind to every
+interface on the computer.
+
+=item C<-p> or C<--port> asks the server to bind to a given TCP port number.
+THe server may ignore this option. The default port is 5000.
+
+=item C<-l> or C<--listen> gives the server a combination of hostname and port,
+a port, or a file path on which to listen. You may specify this option multiple
+times to set multiple values. The server may ignore this option.
+
+=back
+
+=head2 Loader Options
+
+X<< C<Plack::Loader> >>
+X<< C<Plack::Loader::Delayed> >>
+X<< C<Plack::Loader::Restarter> >>
+X<< C<Plack::Loader::Shotgun> >>
+
+Finally, you may change how C<plackup> loads and executes your application.
+
+The C<-L> or C<--loader> option chooses the module used to load the server
+backend.  The default is C<Plack::Loader>. The C<Restarter> loader runs when
+you specify C<-r> or C<-R>. The C<Delayed> loader starts the server but runs
+your application only on the first request, so as to simplify any
+initialization or pre-forking behavior. The C<Shotgun> loader runs every
+request to your application in a forked child.
+
+See the documentation for C<Plack::Loader>, C<Plack::Loader::Restarter>,
+C<Plack::Loader::Delayed>, and C<Plack::Loader::Shotgun> for more details.
