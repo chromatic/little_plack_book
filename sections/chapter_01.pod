@@ -1,0 +1,21 @@
+=head0 Deploying a Plack Application
+
+In the olden days of CGI programming, deploying a web application meant
+understanding the details of file layout, configuration files, directory
+permissions, and even how the web server communicated with your application or
+app server. PSGI and Plack reduce that deployment burden to a few decisions:
+what server to use and how to customize the application's environment.
+
+X<C<plackup>>
+X<F<.psgi> file>>
+
+Plack's backend server adaptors do much of the work, but Plack's frontend
+system--in the form of the C<plackup> program and the F<.psgi> file
+convention--simplifies the common and tedious details and allows configuration
+where you really want it.
+
+L<plackup_deployment>
+
+L<dot_psgi_file>
+
+L<choosing_server>
