@@ -33,7 +33,7 @@ could write a very simple Perl web application like:
 
     sub hello_world
     {
-        return [ 200, [ 'Content-Type', text/html' ], 'Hello, world!' ];
+        return [ 200, [ 'Content-Type', 'text/html' ], [ 'Hello, world!' ] ];
     }
 
 =end programlisting
