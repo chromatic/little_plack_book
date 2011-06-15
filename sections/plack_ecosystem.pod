@@ -1,0 +1,19 @@
+=head1 The Plack Ecosystem
+
+Z<plack_ecosystem>
+
+=for author
+
+Homepage
+
+FAQ
+
+Mailing List
+
+Documentation
+
+Blog
+
+Other resources
+
+=end for
