@@ -9,6 +9,7 @@
 use strict;
 use warnings;
 
+use File::Path 'mkpath';
 use Pod::PseudoPod::HTML;
 use File::Spec::Functions qw( catfile catdir splitpath );
 use EBook::EPUB;
@@ -282,7 +283,7 @@ sub generate_ebook
 
     # Make the directory if it doesn't exist.
     my $dir = catdir(qw(build epub));
-    mkdir $dir unless -e $dir;
+    mkpath $dir unless -e $dir;
 
     # Generate the ePub eBook.
     my $filename = catfile(qw(build epub little_plack_book.epub));
