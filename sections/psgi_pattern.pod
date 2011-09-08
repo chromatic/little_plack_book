@@ -4,10 +4,12 @@ Z<psgi_pattern>
 
 X<PSGI>
 
-Plack itself is an implementation of PSGI, which is itself a documented
-interface with a protocol. The PSGI interface underlies and supports Plack,
-because PSGI defines what a web application is. PSGI isn't magic. PSGI is
-merely a standardization of what you as a web programmer already know.
+Plack is an implementation of PSGI (Perl Web Server Gateway Interface),
+which is itself a documented interface with a protocol. The Plack interface
+exists between an http aware backend and a perl program. The PSGI interface 
+underlies and supports Plack, because PSGI defines what a web application is. 
+PSGI isn't magic. PSGI is merely a standardization of what you as a web 
+programmer already know.
 
 =begin sidebar
 
@@ -21,7 +23,7 @@ U<http://chneukirchen.org/blog/archive/2007/02/introducing-rack.html>>.
 =end sidebar
 
 Consider how a web application works. A client makes a request of a server,
-passing along a URL via one of the HTTP methods, other HTTP headers, and other
+passing along a URL via one of the HTTP methods, HTTP headers, and other
 request information. The server performs some action, whether reading a file or
 invoking part or all of a program. The server returns an HTTP status code, some
 HTTP headers, and the body of the response.
@@ -61,10 +63,20 @@ typed in manually from C<curl> or C<telnet>, there may be no incoming HTTP
 headers or HTTP payload. Likewise, the server may respond with merely the HTTP
 status code.
 
-PSGI codifies and encapsulates this pattern. A PSGI-compatible application is a
+PSGI codifies and encapsulates this pattern. 
+
+# Which pattern? The pattern of request -> process -> response? Or of status ->
+# header -> body?
+
+A PSGI-compatible application is a
 Perl function which takes as a single argument a hash reference of HTTP request
 data and returns a one-to-three element array reference of HTTP response data.
 You could have invented this. It's really that simple.
+
+# You seem to be implying that a PSGI compatible application is merely the 
+# convention of passing request / response data structures. This doesn't seem
+# like a specification, nor even really a protocol, just a well-defined convention.
+# Perhaps that is merely what a specification is, a defined convention.
 
 X<PSGI; specification>
 
@@ -101,6 +113,7 @@ Add link to middleware chapter when it exists.
 
 A PSGI-compatible application--a function conforming to the PSGI interface--may
 wrap one or more other PSGI-compatible applications. Almost anything you can
-imagine in possible this way. In particular, this enables middleware to
+imagine is possible this way. In particular, this enables middleware to
 intercept, rewrite, modify, redispatch, and even bypass applications as
 desired.
+
