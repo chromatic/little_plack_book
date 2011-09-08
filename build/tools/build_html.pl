@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 
+use File::Path 'mkpath';
 use Pod::PseudoPod::HTML;
 use File::Spec::Functions qw( catfile catdir splitpath );
 
@@ -80,6 +81,7 @@ sub get_output_fh
     my $chapter = shift;
     my $name    = ( splitpath $chapter )[-1];
     my $htmldir = catdir( qw( build html ) );
+    mkpath $htmldir unless -e $htmldir;
 
     $name       =~ s/\.pod/\.html/;
     $name       = catfile( $htmldir, $name );
