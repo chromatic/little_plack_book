@@ -1,0 +1,19 @@
+=head0 Testing Plack Applications
+
+The Perl community as a whole trusts that its software works because of a
+relentless focus on automated testing. If you've installed distributions from
+the CPAN, you've seen that the best code tends to have plenty of tests which
+run before installation. The same tools and techniques used to test modules and
+distributions are available to test applications. Perl and the CPAN make that
+easy.
+
+True to form, Plack and PSGI make testing your applications easy, too. Because
+you can deploy any well-written Plack application to any conforming Plack
+backend, you don't have to spend your development time configuring and
+deploying an application to run fragile tests against it. Your tests can have
+full control over the testing environment of your application--with or without
+even running a web server locally--thanks to C<Plack::Test>.
+
+L<plack_test>
+
+L<mech_psgi>

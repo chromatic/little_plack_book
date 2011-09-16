@@ -1,0 +1,3 @@
+=head1 Testing with C<Plack::Test>
+
+Z<plack_test>
