@@ -1,0 +1,5 @@
+<h1>Stored [% id %]!</h1>
+
+<p>[% note %]</p>
+
+<p>(<a href="/index">index</a>)</p>

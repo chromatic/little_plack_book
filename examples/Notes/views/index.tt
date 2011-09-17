@@ -1,0 +1,7 @@
+<h1>Notes</h1>
+
+[% FOR note IN notes %]
+<p><a href="/read/[% note %]">[% note %]</a></p>
+[% END %]
+
+<p><a href="/create">create new note</a></p>

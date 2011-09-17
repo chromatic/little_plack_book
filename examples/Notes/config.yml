@@ -1,0 +1,12 @@
+appname: Notes
+charset: "UTF-8"
+logger: file
+log: debug
+session: YAML
+show_errors: 1
+warnings: 1
+template: template_toolkit
+engines:
+    template_toolkit:
+        start_tag: '[%'
+        end_tag: '%]'

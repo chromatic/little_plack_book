@@ -1,0 +1,8 @@
+<h1>Creating New Note</h1>
+
+<form action="/store" method="POST">
+<p>Title: <input type="text" name="note" value="[% note %]" /></p>
+<textarea rows="10" cols="80" name="contents">[% contents %]</textarea>
+<br />
+<input type="submit" value="Create" />
+</form>

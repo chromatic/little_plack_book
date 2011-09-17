@@ -1,0 +1,9 @@
+<h1>[% note %]</h1>
+
+[% contents or 'This note is empty. Fill it in?' %]
+
+<form action="/store/[% note %]" method="POST">
+<textarea name="contents" rows="10" cols="80">[% contents %]</textarea>
+<br />
+<input type="submit" value="Update" />
+</form>
