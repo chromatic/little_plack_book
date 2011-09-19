@@ -1,3 +1,361 @@
 =head1 Testing with C<Plack::Test>
 
 Z<plack_test>
+
+C<Plack::Test>
+
+The Plack distribution includes a testing module, C<Plack::Test>, which deploys
+your application for you so that you can focus on proving that it works the way
+you intend. Here is the brilliance of Plack both subtle and evident: just as
+you can deploy to mod_perl, Nginx, Starman, Twiggy, or any of myriad live
+servers, you may also deploy to a mocked server which only exists as part of
+your test process.
+
+C<Plack::Test> also lets you deploy to those other C<Plack::Handler> backends
+if you like.
+
+=head2 The C<Plack::Test> Structure
+
+X<C<Test::More>>
+
+C<Plack::Test> exports one function, C<test_psgi>. It takes two parameters, a
+Plack application and a function reference which runs tests against that
+application. In conjunction with the Perl 5 core module C<Test::More>, you
+might write:
+
+=begin programlisting
+
+    use Plack::Test;
+    use Test::More;
+    use My::App;
+
+    my $app = get_my_app();
+    test_psgi $app, sub
+    {
+        my $cb = shift;
+
+        ...
+
+        # tests go here
+    };
+
+=end programlisting
+
+X<C<HTTP::Request>>
+X<C<HTTP::Response>>
+X<C<HTTP::Message>>
+X<C<LWP>>
+
+The testing function has a single parameter, a callback function reference
+which takes an C<HTTP::Request> object and returns an C<HTTP::Response>
+objectN<These modules are part of the C<HTTP::Message> distribution, a
+dependency of C<LWP>.>. This gives you tremendous control over the details of
+making requests and examining responses.
+
+=head2 Basic Tests
+
+Suppose you have a very simple Plack application which compares two values
+provided within the query string of a C<GET> request. If they evaluate to the
+same string values, the application returns a successful response. Otherwise,
+it returns a failure. That application might be:
+
+=begin programlisting
+
+    my $app = sub
+    {
+        my $res  = Plack::Request->new( shift );
+
+        my $want = $res->param( 'want' );
+        my $have = $res->param( 'have' );
+        my $desc = $res->param( 'desc' );
+
+        my ($code, $output) = ( $want eq $have )
+                            ? ( 200, 'ok'      )
+                            : ( 412, 'not ok'  );
+
+        $output .= ' - ' . $desc if $desc;
+
+        return
+        [
+            $code,
+            [ 'Content-Type' => 'text/plain' ],
+            [ $output ]
+         ];
+    };
+
+=end programlisting
+
+=begin sidebar
+
+X<C<Test::Tutorial>>
+X<C<Test::More>>
+
+C<Plack::Test> builds on Perl 5's standard testing tools. If the behavior of
+this example Plack application is unfamiliar, take a few minutes to read
+C<Test::Tutorial>, then see the documentation of C<Test::More>.
+
+=end sidebar
+
+Basic tests for this application must ensure that:
+
+=over 4
+
+=item * providing equivalent values should produce a 200 status code
+
+=item * providing differing values should produce a 412 status code
+
+=item * the HTTP body should reflect the success or failure of the comparison
+
+=item * the optional description should be present in the body when provided
+
+=back
+
+You can easily imagine more tests--what happens without one or both
+parameters?--but these are the minimum possible tests to write.
+
+Assume that C<$app> contains this application. Add the basic C<Plack::Test>
+framework code:
+
+=begin programlisting
+
+    B<#!/usr/bin/env perl>
+
+    B<use Modern::Perl;>
+
+    B<use Test::More;>
+    B<use Plack::Test;>
+    B<use Plack::Request;>
+    B<use HTTP::Request::Common;>
+
+    my $app = sub { ... };
+
+    test_psgi $app, sub { ... };
+
+    B<done_testing();>
+
+=end programlisting
+
+X<C<HTTP::Request::Common>>
+
+The C<use> lines enable a few features found in other Perl 5 modules. In
+particular, C<Test::More> provides several testing functions used later.
+C<HTTP::Request::Common> provides several shortcut functions to create
+C<HTTP::Request> objects.
+
+The C<done_testing()> line informs C<Test::More> that the program has run to
+completion. Some tests may have failed, but the program ran the tests it
+expected to run.
+
+The interesting testing code is within the sub passed to C<test_psgi>:
+
+=begin programlisting
+
+    test_psgi $app, sub
+    {
+        my $cb  = shift;
+
+        my $res = $cb->( GET '/?have=tea;want=tea' );
+        ok $res->is_success, 'Request should succeed when values match';
+        is $res->decoded_content, 'ok',
+            '... with descriptive success message';
+
+        ...
+    };
+
+=end programlisting
+
+When C<test_psgi> gets the application to test and the test code to run, it
+invokes the test code (the anonymous subroutine provided as the second
+argument) and passes that code a callback function reference. Use this
+callback--C<$cb>--to make requests of the application.
+
+The prelude to this code used the module C<HTTP::Request::Common>, which
+provides a C<GET> function. These code snippets are equivalent:
+
+=begin programlisting
+
+    $res = $cb->( GET '/?have=tea;want=tea' );
+    $res = $cb->( HTTP::Request->new( GET => '/?have=tea;want=tea' ) );
+
+=end programlisting
+
+The callback makes the request of the Plack application--using the HTTP scheme
+and C<localhost>, when given URIs without either scheme or host, as in this
+example--and returns an C<HTTP::Response> object. If the application throws an
+uncaught exception, the callback will catch it and return an C<HTTP::Response>
+object with a 500 error and a plain text version of the exception.
+
+Use the response object with the testing functions of C<Test::More> or any
+other Perl testing module. For example, the C<is_success> method returns a
+boolean value signifying whether the response code is successful (C<2I<xx>>,
+and in this case, C<200>). The C<decoded_content> method returns the body of
+the response properly encoded to Perl's internal Unicode formatN<Otherwise you
+run the risk of test failures with Unicode returned from your application.>. As
+the result is a standard Perl string, you can do anything with it that you
+like, such as testing that it is exactly what you expect.
+
+You can go a long way with these two methods of C<HTTP::Response>, such as
+testing that a request did I<not> succeed with a C<200> status code:
+
+=begin programlisting
+
+    $res    = $cb->( GET '/?have=10;want=20' );
+    ok ! $res->is_success, 'Request should fail when values do not match';
+    is   $res->decoded_content, 'not ok', '... with descriptive error';
+
+=end programlisting
+
+... but be careful to construct your query parameters appropriately:
+
+=begin programlisting
+
+    $res    = $cb->( GET '/?have=cow;want=cow;desc=Cow+Comparison' );
+    ok $res->is_success, 'Request should succeed when values do';
+    is $res->decoded_content, 'ok - Cow Comparison',
+        '... including description when provided';
+
+=end programlisting
+
+X<C<URI>>
+
+The C<URI> module can simplify constructing complex queries:
+
+=begin programlisting
+
+    my $uri = URI->new( '/' );
+    $uri->query_form( have => 'cow', want => 'cow', desc => 'Cow Comparison' );
+    $res    = $cb->( GET $uri );
+
+=end programlisting
+
+Although these two methods are by far the most useful, see the documentation of
+C<HTTP::Request>, C<HTTP::Response>, and C<HTTP::Message> for many more methods
+to create and test complex requests and responses. For example, to test the
+content type and charset of a response:
+
+=begin programlisting
+
+    is $res->content_type,    'text/plain', '... with plain text content';
+    is $res->content_charset, 'US-ASCII',   '... in ASCII';
+
+=end programlisting
+
+... though of course your applications get more interesting when they handle
+more than mere ASCII.
+
+=head2 Running Tests
+
+As with the standard Perl testing approach, these automated tests are merely
+valid Perl programs which produce TAPN<Test Anything Protocol; see
+U<http://testanything.org/>.> output. You can run them directly:
+
+=begin screen
+
+    $ perl t/ok_over_http.t
+    ok 1 - Request should succeed when values do
+    ok 2 - ... with descriptive success message
+    ok 3 - Request should fail when values do not match
+    ok 4 - ... with descriptive error
+    ok 5 - Request should succeed when values do
+    ok 6 - ... including description when provided
+    ok 7 - ... with plain text content
+    ok 8 - ... in ASCII
+    1..8
+
+=end screen
+
+X<C<prove>>
+
+... or with the C<prove> utility provided as part of Perl's testing tools:
+
+=begin screen
+
+    $ perl t/ok_over_http.t
+    t/ok_over_http.t .. ok
+    All tests successful.
+    Files=1, Tests=6...
+    Result: PASS
+
+=end screen
+
+Note that more complex projects might require additional setup of the Perl
+library search path, for example, using C<perl -Ilib t/test_file.t> or C<prove
+-l t/test_file.t>. If you use a framework such as Catalyst, Mojolicious, or
+Dancer, the standard generated scaffolding should generate example tests as
+well as a test runner.
+
+=head2 Managing Tests
+
+C<Plack::Test> offers lots of power and flexibility for testing small details
+of your applications, but it offers no abstraction beyond the C<test_psgi>
+function. Any structure to your test files comes from you or other testing
+modules. One possible test pattern uses named test functions to separate
+logical components of the application:
+
+=begin programlisting
+
+    #!/usr/bin/env perl
+
+    use Modern::Perl;
+
+    use Test::More;
+    use Plack::Test;
+    use Package::Stash;
+    use namespace::autoclean;
+    use HTTP::Request::Common;
+
+    exit main();
+
+    sub main
+    {
+        my $app   = get_app();
+        my $stash = Package::Stash->new( __PACKAGE__ );
+
+        test_psgi $app, __PACKAGE__->can( $_ )
+            for grep /^test_/, $stash->list_all_symbols( 'CODE' );
+
+        done_testing();
+
+        return 0;
+    }
+
+=end programlisting
+
+X<C<Package::Stash>>
+X<C<UNIVERSAL>>
+
+This approach wraps all test dispatch in a C<main> function to encapsulate it
+from any other code outside of functions. The only interesting part of this
+code is the introspection code, which uses C<Package::Stash> and C<can> (from
+Perl's core C<UNIVERSAL> package) to find functions I<defined> in this package
+named C<test_I<name>>.
+
+=begin sidebar
+
+X<C<namespace::autoclean>>
+
+Why doesn't this code find C<test_psgi> and cause strange errors? The
+C<namespace::autoclean> module removes that imported function I<before> C<main>
+runs. Even though C<main> still knows how to call it, it's no longer visible to
+C<Package::Stash> when the introspection code runs.
+
+=end sidebar
+
+All of this means that it's easy to add new tests to the file:
+
+=begin programlisting
+
+    sub test_root
+    {
+        my $cb  = shift;
+        my $res = $cb->GET( '/' );
+
+        ok $res->is_redirect, '/ request should redirect';
+        like $res->header( 'Location' ), qr{/index$}, '... to /index';
+
+        ...
+    }
+
+=end programlisting
+
+... as they're merely named functions which run as C<Plack::Test> callbacks.
