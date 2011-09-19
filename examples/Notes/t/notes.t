@@ -40,12 +40,8 @@ sub test_root
 {
     my $cb  = shift;
     my $res = $cb->( GET '/' );
-
-    exit unless like $res->content, qr/<h1>Notes/, '/ should show index page';
-    like $res->content, qr!/create">create new note</a>!,
-        '... with link to create more notes';
-
-    unlike $res->content, qr!/read/.+?">!, '... but no links to notes (yet)';
+    ok $res->is_redirect, '/ should redirect';
+    like $res->header( 'Location' ), qr!/index$!, '... to index';
 }
 
 sub test_index

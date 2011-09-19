@@ -3,7 +3,8 @@ package Notes v1.0.0 {
     use Dancer;
     use Template;
 
-    get '/'      => \&show_index;
+    get '/'      => sub { redirect '/index' };
+
     get '/index' => \&show_index;
 
     get qr{/read/(.*?)/?} => sub
