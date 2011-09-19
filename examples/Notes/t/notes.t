@@ -7,19 +7,19 @@ use Dancer ();
 use File::Temp;
 use Test::More;
 use Plack::Test;
+use Package::Stash;
+use namespace::autoclean;
 use HTTP::Request::Common;
 
 exit main();
 
 sub main
 {
-    my $app = get_app();
+    my $app   = get_app();
+    my $stash = Package::Stash->new( __PACKAGE__ );
 
-    for my $test (qw( root index read create store ))
-    {
-        next unless my $sub = __PACKAGE__->can( 'test_' . $test );
-        test_psgi $app, $sub;
-    }
+    test_psgi $app, __PACKAGE__->can( $_ )
+        for grep /^test_/, $stash->list_all_symbols( 'CODE' );
 
     done_testing();
 
