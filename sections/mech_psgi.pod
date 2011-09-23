@@ -1,3 +1,160 @@
 =head1 Testing with C<Test::WWW::Mechanize::PSGI>
 
 Z<mech_psgi>
+
+X<C<Test::WWW::Mechanize::PSGI>>
+
+C<Plack::Test> offers fine-grained control over the details of HTTP requests
+and responses. It's most appropriate for testing handlers, middleware, and
+other Plack components which modify requests and responses. For testing
+applications, C<Test::WWW::Mechanize::PSGI> may be more useful.
+
+Like C<Plack::Test>, C<Test::WWW::Mechanize::PSGI> can run your PSGI
+application it the same process without needing to communicate with a running
+HTTP server. Unlike C<Plack::Test>, TWMP cannot currently communicate with a
+running HTTP server. For most application testing, this is unlikely to be a
+problem.
+
+=head2 The C<Test::WWW::Mechanize::PSGI> Structure
+
+X<C<Test::WWW::Mechanize>>
+X<C<WWW::Mechanize>>
+X<C<LWP::UserAgent>>
+
+C<Test::WWW::Mechanize::PSGI> is an object oriented module and subclasses
+C<Test::WWW::Mechanize> which in turn subclasses C<WWW::Mechanize>, itself a
+child of C<LWP::UserAgent>, to provide several test assertions as methods.
+Start your testing by creating a new object. Pass your PSGI application to the
+constructor. The resulting object can perform HTTP requests and you can examine
+it or call test assertions on it.
+
+=begin programlisting
+
+    use Test::More;
+    use Test::WWW::Mechanize::PSGI;
+
+    use My::App;
+
+    my $app  = get_my_app();
+    my $mech = Test::WWW::Mechanize::PSGI->new( app => $app );
+
+    # ready for testing
+
+=end programlisting
+
+=head2 Basic Tests
+
+Given the example testing app (L<basic_psgi_test_app>) from the C<Plack::Test>
+section, the same testing strategy applies. Basic tests must verify that HTTP
+C<GET> and C<POST> methods with the appropriate query or form parameters
+produce the expected results. The Mechanize approach simplifies the
+construction and examination of the requests.
+
+The C<get_ok()> method performs a C<GET> request and asserts that the request
+succeeded by returning an HTTP C<2xx> status code. Performing a request stores
+within the object the I<contents> of the response, so that subsequent methods
+can examine the Mechanize object and make further test assertions. This is
+easier to show than to explain:
+
+=begin programlisting
+
+    $mech->get_ok( '/?have=foo;want=foo',
+        'Request should succeed when values match' );
+    $mech->content_is( 'ok', '... with descriptive success message' );
+
+=end programlisting
+
+If the C<GET> fails, the first test assertion will fail as well. There is no
+corresponding C<get_not_ok> method, so you must use the C<success> method
+provided by the grandparent class C<WWW::Mechanize> instead:
+
+=begin programlisting
+
+    $mech->get( '/?have=10;want=20' );
+    ok ! $mech->success, 'Request should fail when values do not match';
+
+    $mech->content_is( 'not ok', '... with descriptive error' );
+
+=end programlisting
+
+X<C<URI>>
+
+You can construct your own URIs with query strings with the C<URI> module:
+
+=begin programlisting
+
+    my $uri = URI->new( '/' );
+    $uri->query_form( have => 'cow',
+                      want => 'cow',
+                      desc => 'Cow Comparison' );
+
+    $mech->get_ok( $uri, 'Request should succeed when values do' );
+    $mech->content_is( 'ok - Cow Comparison',
+        '... including description when provided' );
+
+=end programlisting
+
+... and you may poke into the C<HTTP::Response> object contained within the
+Mech object when Mech doesn't provide test assertions for specific information:
+
+=begin programlisting
+
+    is $mech->content_type, 'text/plain', '... with plain text content';
+    is $mech->response->content_charset, 'US-ASCII', '... in ASCII';
+
+=end programlisting
+
+Performing C<POST> requests is similar. The first argument to the method is the
+URI to which to post. The second is an array reference of key/value pairs to
+use as C<POST>ed form data:
+
+=begin programlisting
+
+    $mech->post( '/', [ have => 'cow', want => 'pig', desc => 'æ' ] );
+    ok ! $mech->success, 'Request should fail given different values';
+    $mech->content_is( "not ok - \x{00E6}",
+        '... including description when provided' );
+    is $mech->content_type, 'text/plain', '... with plain text content';
+    is $mech->response->content_charset, 'UTF-8', '... encoded as UTF-8';
+
+=end programlisting
+
+Other useful action methods are C<head_ok()> and C<put_ok()>, which perform
+HTTP C<HEAD> and C<PUT> requests respectively.
+
+=head2 Stateful Mechanize
+
+As you've noticed, the Mech object remembers the state of the response. Not
+only does this allow you to make test assertions against the response such as
+C<content_is()> and C<content_like()>, but you can submit forms, click buttons,
+and follow links on the content. See the documentation for
+C<Test::WWW::Mechanize> for more details.
+
+This encapsulation and statefulness affords you the interesting possibility of
+testing application behavior with and without certain middleware active or with
+and without user authentication active, for example.
+
+=head2 When to use Mechanize
+
+C<WWW::Mechanize> has a larger ecosystem than C<Plack::Test> does, due to its
+age. Several CPAN distributions provide useful extensions.
+
+=over 4
+
+=item * C<Test::WWW::Mechanize::Driver> supports data-driven testing by reading
+YAML files containing details of requests to make and tests to run. You can
+provide a C<Test::WWW::Mechanize::PSGI> object to its constructor.
+
+=item * C<WWW::Mechanize::Plugin::Ajax> adds Ajax support to C<WWW::Mechanize>.
+
+=item * C<Test::WWW::Mechanize::Mojo> is a Mechanize built to test applications
+written using the Mojolicious web framework.
+
+=item * C<Test::WWW::Mechanize::Catalyst> does the same for the Catalyst
+framework.
+
+=back
+
+Unfortunately, C<WWW::Mechanize>'s subclassing design can make it difficult for
+some of these modules to interact with others. In time perhaps a newer design
+will allow more flexibility and composition possibilities.

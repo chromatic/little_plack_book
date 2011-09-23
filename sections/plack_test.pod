@@ -54,6 +54,8 @@ making requests and examining responses.
 
 =head2 Basic Tests
 
+Z<basic_psgi_test_app>
+
 Suppose you have a very simple Plack application which compares two values
 provided within the query string of a C<GET> request. If they evaluate to the
 same string values, the application returns a successful response. Otherwise,
