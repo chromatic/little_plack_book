@@ -2,3 +2,329 @@
 
 Z<dot_psgi_file>
 
+A PSGI application is a function reference. To make deployment easier, PSGI
+convention suggests the use of a file with the F<.psgi> extension which returns
+that function reference. Deploying such an application may be as easy as:
+
+=begin screen
+
+    $ B<plackup myapp.psgi>
+
+=end screen
+
+=head2 Simple F<.psgi> Files
+
+Z<simple_psgi_files>
+
+X<F<.psgi> files; Catalyst>
+X<Catalyst; F<.psgi> file>
+
+The I<contents> of that file may be almost anything, as long as the final Perl
+statement in the file returns a function reference. For example, Catalyst
+applicationsN<Catalyst 5.9 added native support for Plack.> can have F<.psgi>
+files as simple as:
+
+=begin programlisting
+
+    use Catalyst::CatHerder;
+
+    Catalyst::CatHerder->psgi_app;
+
+=end programlisting
+
+... though you're likely to use Plack middleware with Catalyst and PSGI
+applications in general. A slightly smarter Catalyst file might be:
+
+=begin programlisting
+
+    use Catalyst::CatHerder;
+
+    Catalyst::CatHerder->apply_default_middlewares;
+    Catalyst::CatHerder->psgi_app;
+
+=end programlisting
+
+X<F<.psgi> files; Dancer>
+X<Dancer; F<.psgi> file>
+X<F<.psgi> files; Mojolicious>
+X<Mojolicious; F<.psgi> file>
+
+Other frameworks make this even easier. For example, the F<bin/app.pl> script
+generated as part of Dancer's scaffolding works as a F<.psgi> file when run
+under Plack. Mojolicious's F<script/myapp> works similarly.
+
+X<F<.psgi> files; CGI programs>
+X<C<Plack::App::WrapCGI>>
+
+You can even turn a program written to run under the CGI model--executed with
+C<fork>/C<exec> from a F<cgi-bin> directory--into a Plack application with
+C<Plack::App::WrapCGI>:
+
+=begin programlisting
+
+    use Plack::App::WrapCGI;
+
+    Plack::App::WrapCGI->new( script => '/opt/www/cgi-bin/countdown.pl' )
+                       ->to_app;
+
+=end programlisting
+
+Of course you can always write a program directly in your F<.psgi> file:
+
+=begin programlisting
+
+    my $count = 0;
+
+    sub
+    {
+        [
+            200,
+            [ 'Content-Type', 'text-plain' ],
+            [ $count ],
+        ]
+    };
+
+=end programlisting
+
+=head2 Enabling Middleware
+
+Z<enabling_middleware>
+
+=for author
+
+Link to middleware section when written.
+
+=end for
+
+Plack middleware sits between an incoming request and an application. It can
+modify requests and responses as it sees fit--even redirecting them elsewhere.
+The PSGI model allows you to use middleware without having to modify your
+application and to apply and remove middleware without your application even
+knowing that it's there.
+
+The F<.psgi> file allows you to control this middleware. You can, of course,
+enable it within your application yourself, but the separation of deployment
+concerns from application concerns is a benefit of PSGI; do not give it up
+lightly.
+
+X<C<Plack::Middleware>>
+X<C<Plack::Middleware::Runtime>>
+
+All Plack middleware must conform to the interface defined by
+C<Plack::Middleware>, so all middleware has a method named C<wrap()> which
+applies that middleware to a PSGI application. To apply
+C<Plack::Middleware::Runtime> to your application, you can add to your F<.psgi>
+file:
+
+=begin programlisting
+
+    use Catalyst::CatHerder;
+    use Plack::Middleware::Runtime;
+
+    Catalyst::CatHerder->apply_default_middlewares;
+    my $app = Catalyst::CatHerder->psgi_app;
+    Plack::Middleware::Runtime->wrap( $app );
+
+=end programlisting
+
+X<C<Plack::Middleware::ErrorDocument>>
+
+Some middleware components allow customization. For example,
+C<Plack::Middleware::ErrorDocument> can serve static pages when the PSGI
+response contains specific error codes. Pass the desired arguments to the
+C<wrap()> call after the app:
+
+=begin programlisting
+
+    use Plack::Middleware::ErrorDocument;
+
+    ...
+
+    Plack::Middleware::ErrorDocument->wrap(
+        $app,
+        500 => '/opt/www/error_documents/singingfish.html',
+        404 => '/opt/www/error_documents/laughingbird.html',
+        406 => '/opt/www/error_documents/snoringcat.html',
+    );
+
+=end programlisting
+
+You can, of course, wrap multiple middleware components around an application.
+Be careful that the order of these operations matters.
+
+=begin programlisting
+
+    my $app = Catalyst::CatHerder->psgi_app;
+    $app    = Plack::Middleware::ErrorDocument->wrap( $app, %pages );
+    $app    = Plack::Middleware::Runtime->wrap( $app );
+
+    ...
+
+=end programlisting
+
+If this seems tedious to you, fear not. There is a better way.
+
+=head2 Simplifying F<.psgi> Files with C<Plack::Builder>
+
+Z<plack_builder>
+
+X<C<Plack::Builder>>
+
+C<Plack::Builder> provides your F<.psgi> file with a simpler mechanism to load
+and to apply middleware to your apps. It exports a C<builder()> function which
+applies middleware from the outside in. The I<complete> previous example
+becomes:
+
+=begin programlisting
+
+    use Plack::Builder;
+    use Catalyst::CatHerder;
+
+    builder
+    {
+        enable 'Plack::Middleware::Runtime';
+        enable 'Plack::Middleware::ErrorDocument',
+            500 => '/opt/www/error_documents/singingfish.html',
+            404 => '/opt/www/error_documents/laughingbird.html',
+            406 => '/opt/www/error_documents/snoringcat.html';
+        Catalyst::CatHerder->psgi_app;
+    };
+
+=end programlisting
+
+X<C<Plack::Builder>; C<enable()>>
+
+The C<enable()> function attempts to load the named middleware component for
+you, so you don't even need to write C<use Plack::Middleware::Runtime>.
+
+C<Plack::Builder> will even prepend the C<Plack::Middleware> prefix to the name of the middleware component, so you can even write:
+
+=begin programlisting
+
+    builder
+    {
+        enable 'Runtime';
+        ...
+    };
+
+=end programlisting
+
+C<builder()> returns the wrapped application for you, so either capture its
+return value and return that as the final expression in your F<.psgi> file or
+use the C<builder()> call as the final expression in your file.
+
+X<C<Plack::Builder>; C<enable_if()>>
+X<C<Plack::Middleware::Auth::Basic>>
+
+C<Plack::Builder> supports conditional loading of middleware through
+C<enable_if()>. To require authentication through
+C<Plack::Middleware::Auth::Basic> when the incoming request is outside of the
+local network:
+
+=begin programlisting
+
+    use Net::Netmask;
+    my $netmask = Net::Netmask->new( '10.0.1.0/16' );
+
+    sub authenticate
+    {
+        my ($username, $password) = @_;
+        ...
+    }
+
+    builder
+    {
+        enable_if
+        {
+            my $env = shift;
+            ! $netmask->match( $env->{REMOTE_ATTR} );
+        } 'Auth::Basic', authenticator => \&authenticate;
+
+        Catalyst::CatHerder->psgi_app;
+    }
+
+=end programlisting
+
+C<enable_if()> takes a code block as its first argument. That block receives
+the PSGI environment hash as its argument and returns a boolean value. When
+that value is true, Plack will invoke the provided middleware component for the
+request. When that value is false, Plack will skip that provided middleware
+component.
+
+In this case, users connecting to the application from the local network do not
+need to authenticateN<This is neither a robust nor recommended security
+strategy.>. Users connecting to the application from outside the local network
+do need to authenticate.
+
+X<C<Plack::Middleware::Conditional>>
+
+See C<Plack::Middleware::Conditional> for more details.
+
+=head2 Mounting Multiple Apps with C<Plack::Builder>
+
+X<C<Plack::Builder>; C<mount()>>
+
+C<Plack::Builder> also provides the C<mount()> function which provides virtual
+hosting capabilities in your F<.psgi> file. You can map multiple applications
+to different URLs:
+
+=begin programlisting
+
+    builder
+    {
+        mount '/catherder'    => Catalyst::CatHerder->psgi_app;
+        mount '/dogwhisperer' => Catalyst::DogWhisperer->psgi_app;
+    };
+
+=end programlisting
+
+... and nest C<builder()> calls to apply middleware:
+
+=begin programlisting
+
+    builder
+    {
+        mount '/catherder' =>
+            builder
+            {
+                enable 'Plack::Middleware::Runtime';
+                enable 'Plack::Middleware::ErrorDocument', %errors;
+                Catalyst::CatHerder->psgi_app;
+            };
+        mount '/dogwhisperer' => Catalyst::DogWhisperer->psgi_app;
+    };
+
+=end programlisting
+
+... and you can even mount applications to absolute URLs, not just relative URL
+paths:
+
+=begin programlisting
+
+    builder
+    {
+        mount 'http://catherder.apps.mycompany.internal/'
+                 => Catalyst::CatHerder->psgi_app;
+        mount '/dogwhisperer' => Catalyst::DogWhisperer->psgi_app;
+    };
+
+
+=end programlisting
+
+If you mount one application, you must mount I<all> applications, including the
+default application at the root (if you want one):
+
+=begin programlisting
+
+    builder
+    {
+        mount '/catherder'    => Catalyst::CatHerder->psgi_app;
+        mount '/dogwhisperer' => Catalyst::DogWhisperer->psgi_app;
+        mount '/'             => Catalyst::AppPicker->psgi_app;
+    };
+
+=end programlisting
+
+X<C<Plack::App::URLMap>>
+
+See C<Plack::App::URLMap> for more details.
