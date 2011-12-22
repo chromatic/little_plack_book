@@ -1,4 +1,6 @@
 #!/usr/bin/perl
+#PODNAME:  build_html
+#ABSTRACT: Generate HTML files 
 
 use strict;
 use warnings;

@@ -1,4 +1,6 @@
 #!/usr/bin/perl
+#PODNAME:  build_pdf
+#ABSTRACT: Generate PDF files 
 
 use strict;
 use warnings;
