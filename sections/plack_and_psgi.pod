@@ -32,7 +32,7 @@ this offers the possibility of customization. For example, a web framework
 which supports Plack could produce its own Plack-compatible C<::Request> and
 C<::Response> subclasses to add additional behaviors.
 
-=item * C<plackup>, C<Plack::Builder>, and F<.psgi> files
+=item C<plackup>, C<Plack::Builder>, and F<.psgi> files
 
 X<C<plackup>>
 X<F<.psgi> files>
