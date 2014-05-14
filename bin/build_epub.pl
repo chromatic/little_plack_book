@@ -1,6 +1,7 @@
 #!/usr/bin/perl
+#PODNAME:  build_epub
+#ABSTRACT: Simple program to create an ePub eBook.
 
-# Simple program to create an ePub eBook.
 # The basic structure is copied from build_html with some additional
 # code from pod2epub.
 #

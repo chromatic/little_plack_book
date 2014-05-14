@@ -1,3 +1,6 @@
 !.gitignore
-build/chapters/*pod
+build/chapters/*.pod
 build/epub/*.epub
+build/pdf/*.pdf
+build/xhtml/*html
+build/html/*html

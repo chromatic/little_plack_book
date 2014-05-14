@@ -49,7 +49,7 @@ dependencies.
 
 From the top level directory of a checkout, build the individual chapters with:
 
-    $ perl build/tools/build_chapters.pl
+    $ perl bin/build_chapters.pl
 
 The chapter sources are in the sections/ directory.  Each chapter has a
 corresponding chapter_nn.pod file.  Each file contains multiple POD links which
@@ -64,7 +64,7 @@ without generating huge diffs.)
 
 To build HTML from these woven chapters:
 
-    $ perl build/tools/build_html.pl
+    $ perl bin/build_html.pl
 
 This will produce nicely-formatted HTML in the build/html/ directory.  If
 anything looks wrong, it's a mistake on my part (or a CSS problem) and patches
@@ -72,13 +72,13 @@ are very welcome.
 
 To build an ePub eBook from the woven chapters:
 
-    $ perl build/tools/build_epub.pl
+    $ perl bin/build_epub.pl
 
 This will produce an ePub eBook in the build/epub/ directory.
 
 To build PDFs from the chapters:
 
-    $ perl build/tools/build_pdf.pl
+    $ perl bin/build_pdf.pl
 
 This will build PDFs in the build/pdf directory.  You must have App::pod2pdf
 installed from the CPAN.
@@ -89,7 +89,7 @@ Contributing
 This work is licensed under a Creative Commons Attribution-Noncommercial-Share
 Alike 3.0 United States License.  For more details, see:
 
-    http://creativecommons.org/licenses/by-nc-nd/3.0/us/
+    http://creativecommons.org/licenses/by-nc/3.0/us/
 
 Please feel free to point people to this repository. Suggestions and
 contributions are welcome. For now, please refrain from distributing modified
@@ -103,3 +103,6 @@ from Onyx Neon Press:
 
 Onyx Neon will relicense the book under a more liberal license upon
 publication.
+
+This repository contains Google Code Prettify, licensed unter 
+Apache License 2.0.

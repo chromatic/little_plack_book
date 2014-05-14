@@ -1,7 +1,10 @@
 #!/usr/bin/perl
+#PODNAME:  build_html
+#ABSTRACT: Generate HTML files 
 
 use strict;
 use warnings;
+no warnings 'redefine';
 
 use File::Path 'mkpath';
 use Pod::PseudoPod::HTML;
@@ -14,6 +17,12 @@ local *Text::Wrap::wrap;
 my @chapters = get_chapter_list();
 my $anchors  = get_anchors(@chapters);
 
+sub Pod::PseudoPod::HTML::start_Verbatim
+{
+    my $self = shift;
+    $self->{'scratch'} .= '<pre class="prettyprint">'; $_[0]{'in_verbatim'} = 1
+}
+
 sub Pod::PseudoPod::HTML::end_L
 {
     my $self = shift;
@@ -24,6 +33,18 @@ sub Pod::PseudoPod::HTML::end_L
         $self->{scratch} .= '<a href="' . $anchors->{$link}[0] . "#$link\">"
                                         . $anchors->{$link}[1] . '</a>';
     }
+}
+
+sub Pod::PseudoPod::HTML::start_Document { 
+  my ($self) = @_;
+  if ($self->{'body_tags'}) {
+    $self->{'scratch'} .= "\n<link rel='stylesheet' href='prettify.css' type='text/css'>\n";
+    $self->{'scratch'} .= "<script type='text/javascript' src='prettify.js'></script>\n";
+    $self->{'scratch'} .= "<link rel='stylesheet' href='style.css' type='text/css'>\n";
+    $self->{'scratch'} .= "<html>\n<body onload=\"prettyPrint()\">";
+
+    $self->emit('nowrap');
+  }
 }
 
 for my $chapter (@chapters)
